@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Scout</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      width:380px;min-height:480px;
+      background:#0e0b07;
+      font-family:Montserrat,sans-serif;
+      color:#FFD69C;
+      -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+    }
+
+    /* HEADER */
+    .hdr{display:flex;align-items:center;justify-content:space-between;padding:13px 18px 11px;border-bottom:1px solid rgba(182,128,57,.2)}
+    .logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.14em;color:#E4AF7A}
+    .ver{font-size:10px;color:rgba(255,232,199,.28);letter-spacing:.04em}
+
+    /* NAV */
+    .nav{display:flex;border-bottom:1px solid rgba(182,128,57,.2)}
+    .nav-btn{
+      flex:1;padding:12px 0;
+      font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.14em;
+      color:rgba(255,232,199,.35);background:none;border:none;
+      border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;
+    }
+    .nav-btn:hover{color:rgba(255,232,199,.6)}
+    .nav-btn.on{color:#E4AF7A;border-bottom-color:#E4AF7A}
+
+    /* PROGRESS */
+    .prog{display:flex;align-items:center;padding:14px 22px 10px}
+    .p-step{display:flex;flex-direction:column;align-items:center;gap:5px}
+    .p-dot{
+      width:28px;height:28px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:12px;font-weight:700;transition:all .3s;
+    }
+    .p-dot.now  {background:#E4AF7A;color:#1a0e02;box-shadow:0 0 0 3px rgba(228,175,122,.18)}
+    .p-dot.done {background:#B68039;color:#1a0e02}
+    .p-dot.wait {background:rgba(255,255,255,.07);color:rgba(255,232,199,.3)}
+    .p-lbl{font-size:9px;letter-spacing:.08em;font-weight:600;text-transform:uppercase}
+    .p-lbl.now,.p-lbl.done{color:#B68039}
+    .p-lbl.wait{color:rgba(255,232,199,.25)}
+    .p-line{flex:1;height:1px;background:rgba(182,128,57,.2);margin:0 6px 14px}
+    .p-line.done{background:#B68039}
+
+    /* SCREENS */
+    .scr{display:none;flex-direction:column;align-items:center;padding:30px 22px 24px}
+    .scr.on{display:flex}
+
+    /* ── IDLE ── */
+    .rec-ring{
+      width:120px;height:120px;border-radius:50%;
+      background:radial-gradient(circle at 38% 35%,#6b1414,#2c0808);
+      border:2px solid rgba(160,30,30,.45);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;margin-bottom:22px;
+      transition:transform .15s,box-shadow .15s;
+    }
+    .rec-ring:hover{transform:scale(1.05);box-shadow:0 0 28px rgba(229,57,53,.2)}
+    .rec-ring:active{transform:scale(.97)}
+    .rec-dot{width:46px;height:46px;border-radius:50%;background:#e53935;box-shadow:0 0 20px rgba(229,57,53,.55)}
+    .cta{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:.13em;margin-bottom:14px}
+    .hint{font-size:11px;color:rgba(255,232,199,.5);text-align:center;line-height:1.75;max-width:260px}
+    .hint em{color:#E4AF7A;font-style:normal;font-weight:600}
+
+    /* ── RECORDING ── */
+    .live-bar{
+      width:100%;display:flex;align-items:center;gap:10px;
+      padding:10px 14px;border-radius:8px;margin-bottom:16px;
+      background:rgba(180,30,30,.12);border:1px solid rgba(180,30,30,.3);
+    }
+    .live-dot{width:8px;height:8px;border-radius:50%;background:#e53935;flex-shrink:0;animation:blink 1.2s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    .live-lbl{font-size:11px;font-weight:700;color:#FCA5A5;letter-spacing:.1em}
+    .timer{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:21px;font-weight:700;color:#FFD69C}
+
+    .tip{width:100%;padding:13px 15px;border-radius:8px;margin-bottom:14px;background:rgba(228,175,122,.05);border:1px solid rgba(182,128,57,.2)}
+    .tip-h{font-size:11px;font-weight:700;color:#E4AF7A;margin-bottom:5px}
+    .tip-b{font-size:11px;color:rgba(255,232,199,.5);line-height:1.65}
+    .tip-eg{font-size:10px;color:rgba(228,175,122,.55);font-style:italic;background:rgba(228,175,122,.06);border-radius:5px;padding:6px 9px;margin-top:7px}
+
+    .stats{display:flex;gap:8px;width:100%;margin-bottom:16px}
+    .stat{flex:1;background:rgba(33,33,33,.55);border:1px solid rgba(182,128,57,.2);border-radius:8px;padding:9px;text-align:center}
+    .stat-n{font-size:17px;font-weight:700}
+    .stat-l{font-size:9px;color:rgba(255,232,199,.3);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+
+    /* ── PROCESSING ── */
+    .proc-intro{font-size:12px;color:rgba(255,232,199,.5);text-align:center;margin-bottom:18px;line-height:1.7}
+    .ps{
+      width:100%;display:flex;align-items:flex-start;gap:12px;
+      padding:11px 14px;border-radius:8px;margin-bottom:8px;
+      border:1px solid rgba(182,128,57,.18);background:rgba(33,33,33,.5);transition:all .3s;
+    }
+    .ps.done  {border-color:rgba(21,128,61,.35);background:rgba(21,128,61,.08)}
+    .ps.active{border-color:rgba(228,175,122,.35);background:rgba(228,175,122,.07)}
+    .ps-ico{font-size:16px;flex-shrink:0;margin-top:2px}
+    .ps-lbl{font-size:12px;font-weight:700;margin-bottom:2px}
+    .ps.done   .ps-lbl{color:#4ADE80}
+    .ps.active .ps-lbl{color:#E4AF7A}
+    .ps:not(.done):not(.active) .ps-lbl{color:rgba(255,232,199,.3)}
+    .ps-sub{font-size:10px;color:rgba(255,232,199,.35);line-height:1.5}
+    .spin{display:inline-block;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .proc-note{font-size:10px;color:rgba(255,232,199,.28);text-align:center;margin-top:8px;line-height:1.7}
+
+    /* ── SKILL READY ── */
+    .ok-badge{
+      width:100%;display:flex;align-items:center;gap:8px;
+      padding:9px 14px;border-radius:8px;margin-bottom:13px;
+      background:rgba(21,128,61,.1);border:1px solid rgba(21,128,61,.3);
+      font-size:12px;font-weight:700;color:#4ADE80;
+    }
+    .sk-card{width:100%;padding:13px 15px;border-radius:8px;margin-bottom:12px;background:rgba(33,33,33,.55);border:1px solid rgba(182,128,57,.2)}
+    .sk-name{font-size:13px;font-weight:700;color:#FFD69C;margin-bottom:4px}
+    .sk-desc{font-size:10px;color:rgba(255,232,199,.5);line-height:1.6}
+    .install{width:100%;padding:13px 15px;border-radius:8px;margin-bottom:16px;background:rgba(228,175,122,.04);border:1px solid rgba(182,128,57,.18)}
+    .inst-h{font-size:11px;font-weight:700;color:#E4AF7A;margin-bottom:10px}
+    .i-row{display:flex;align-items:flex-start;gap:9px;margin-bottom:8px}
+    .i-row:last-child{margin-bottom:0}
+    .i-n{width:18px;height:18px;border-radius:50%;flex-shrink:0;margin-top:1px;background:rgba(228,175,122,.12);color:#E4AF7A;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+    .i-txt{font-size:10px;color:rgba(255,232,199,.5);line-height:1.65}
+    .i-txt code{font-family:'JetBrains Mono',monospace;font-size:9px;background:rgba(182,128,57,.15);color:#E4AF7A;padding:1px 5px;border-radius:3px}
+
+    /* BUTTONS */
+    .row{display:flex;gap:8px;width:100%}
+    .btn{
+      display:flex;align-items:center;justify-content:center;gap:5px;
+      padding:10px 14px;border-radius:7px;font-family:inherit;
+      font-size:12px;font-weight:600;cursor:pointer;
+      border:1px solid rgba(182,128,57,.25);background:rgba(33,33,33,.6);
+      color:#FFD69C;transition:all .15s;letter-spacing:.02em;
+    }
+    .btn:hover{background:rgba(44,40,30,.9);border-color:rgba(228,175,122,.4)}
+    .btn:active{transform:scale(.98)}
+    .btn-gold{background:linear-gradient(180deg,#C68A41,#A77131);border-color:rgba(228,175,122,.45);color:#1a0e02;font-weight:700;box-shadow:0 2px 14px rgba(182,128,57,.18)}
+    .btn-gold:hover{background:linear-gradient(180deg,#D49848,#B6803F);color:#1a0e02}
+    .btn-wide{flex:2}
+    .btn-sm{flex:1;font-size:11px}
+    .btn-lg{padding:13px;font-size:13px;border-radius:8px}
+
+    /* LIBRARY / SETTINGS empty states */
+    .empty{display:flex;flex-direction:column;align-items:center;padding:50px 24px;gap:10px;color:rgba(255,232,199,.3);font-size:12px;text-align:center}
+    .empty-ico{font-size:34px;margin-bottom:4px}
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo">Scout</div>
+  <div class="ver">v0.1.3 · by Orage AI</div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn on" onclick="setTab('record',this)">Record</button>
+  <button class="nav-btn"    onclick="setTab('library',this)">Library</button>
+  <button class="nav-btn"    onclick="setTab('settings',this)">Settings</button>
+</div>
+
+<!-- PROGRESS (Record tab only) -->
+<div class="prog" id="prog">
+  <div class="p-step">
+    <div class="p-dot now"  id="pd1">1</div>
+    <div class="p-lbl now"  id="pl1">Record</div>
+  </div>
+  <div class="p-line" id="ln1"></div>
+  <div class="p-step">
+    <div class="p-dot wait" id="pd2">2</div>
+    <div class="p-lbl wait" id="pl2">Process</div>
+  </div>
+  <div class="p-line" id="ln2"></div>
+  <div class="p-step">
+    <div class="p-dot wait" id="pd3">3</div>
+    <div class="p-lbl wait" id="pl3">Skill</div>
+  </div>
+</div>
+
+<!-- ════════════ RECORD TAB ════════════ -->
+<div id="tab-record">
+
+  <!-- IDLE -->
+  <div class="scr on" id="s-idle">
+    <div class="rec-ring" onclick="startRec()">
+      <div class="rec-dot"></div>
+    </div>
+    <div class="cta">Click to Record</div>
+    <div class="hint">
+      Do the task on any website while we watch.<br>
+      <em>Talk out loud</em> — explain what you're doing as you go.<br>
+      That's what makes the skill great.
+    </div>
+  </div>
+
+  <!-- RECORDING -->
+  <div class="scr" id="s-recording">
+    <div class="live-bar">
+      <div class="live-dot"></div>
+      <div class="live-lbl">REC</div>
+      <div class="timer" id="timer">00:00</div>
+    </div>
+
+    <div class="tip">
+      <div class="tip-h">💬 Keep talking out loud!</div>
+      <div class="tip-b">Say <em style="color:#E4AF7A;font-style:normal;">why</em> you click each thing — not just what. More context = smarter skill.</div>
+      <div class="tip-eg">"I'm clicking here to filter to only the unpaid invoices from last month…"</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-n" id="ev-n">0</div><div class="stat-l">actions</div></div>
+      <div class="stat"><div class="stat-n" id="sh-n">0</div><div class="stat-l">screenshots</div></div>
+      <div class="stat"><div class="stat-n">🎙️</div><div class="stat-l">audio</div></div>
+    </div>
+
+    <div class="row">
+      <button class="btn btn-sm" id="pause-btn" onclick="togglePause()">⏸ Pause</button>
+      <button class="btn btn-gold btn-wide" onclick="stopRec()">⏹ Stop &amp; Build Skill</button>
+    </div>
+  </div>
+
+  <!-- PROCESSING -->
+  <div class="scr" id="s-processing">
+    <div class="proc-intro">
+      Building your skill…<br>
+      <span style="font-size:10px">You can close this — we'll save the file to Downloads when ready.</span>
+    </div>
+    <div class="ps done"   id="ps0"><div class="ps-ico">✅</div><div><div class="ps-lbl">Uploaded</div><div class="ps-sub">Screenshots + audio sent</div></div></div>
+    <div class="ps active" id="ps1"><div class="ps-ico"><span class="spin">⚙️</span></div><div><div class="ps-lbl">Transcribing your voice</div><div class="ps-sub">Turning what you said into text…</div></div></div>
+    <div class="ps"        id="ps2"><div class="ps-ico">📝</div><div><div class="ps-lbl">Writing the skill</div><div class="ps-sub">Claude reads everything and writes instructions</div></div></div>
+    <div class="ps"        id="ps3"><div class="ps-ico">💾</div><div><div class="ps-lbl">Saving to Downloads</div><div class="ps-sub">Your .zip is ready to install</div></div></div>
+    <div class="proc-note">⏱ Usually 30–90 seconds. Safe to close this window.</div>
+  </div>
+
+  <!-- SKILL READY -->
+  <div class="scr" id="s-skill">
+    <div class="ok-badge">✅ Your skill is ready!</div>
+
+    <div class="sk-card">
+      <div class="sk-name" id="sk-name">Export Unpaid Invoices to CSV</div>
+      <div class="sk-desc" id="sk-desc">Filters invoices by status, exports unpaid ones to CSV, saves to the finance folder.</div>
+    </div>
+
+    <div class="install">
+      <div class="inst-h">🚀 Install in 2 steps</div>
+      <div class="i-row">
+        <div class="i-n">1</div>
+        <div class="i-txt">Click <strong style="color:#FFD69C">Save Skill</strong> below — a .zip downloads to your Downloads folder.</div>
+      </div>
+      <div class="i-row">
+        <div class="i-n">2</div>
+        <div class="i-txt">Unzip it into <code>~/.claude/skills/</code> then restart Claude Code. Done!</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="btn btn-gold btn-wide btn-lg" onclick="saveSkill()">⬇ Save Skill (.zip)</button>
+      <button class="btn btn-sm" onclick="copySkill(this)">Copy</button>
+      <button class="btn btn-sm" onclick="redo()">Redo</button>
+    </div>
+  </div>
+
+</div><!-- /tab-record -->
+
+<!-- ════════════ LIBRARY TAB ════════════ -->
+<div id="tab-library" style="display:none">
+  <div class="empty">
+    <div class="empty-ico">📭</div>
+    <div>No recordings yet.</div>
+    <div style="font-size:10px;color:rgba(255,232,199,.2)">Record on a real webpage to make your first one.</div>
+  </div>
+</div>
+
+<!-- ════════════ SETTINGS TAB ════════════ -->
+<div id="tab-settings" style="display:none">
+  <div style="padding:20px;display:flex;flex-direction:column;gap:10px">
+    <div style="font-size:10px;color:rgba(255,232,199,.3);letter-spacing:.08em;text-transform:uppercase;padding:4px 0">Account</div>
+    <div style="font-size:12px;color:rgba(255,232,199,.55);padding:10px 14px;background:rgba(33,33,33,.55);border:1px solid rgba(182,128,57,.2);border-radius:8px">user@example.com</div>
+    <button class="btn" style="width:100%">Sign out</button>
+    <div style="font-size:10px;color:rgba(255,232,199,.3);letter-spacing:.08em;text-transform:uppercase;padding:8px 0 4px">Danger zone</div>
+    <button class="btn" style="width:100%;border-color:rgba(220,38,38,.3);color:rgba(252,165,165,.65)">Delete all my data</button>
+  </div>
+</div>
+
+<script>
+  let timerInt=null,secs=0,paused=false,evN=0,shN=0;
+
+  /* TABS */
+  function setTab(id,el){
+    ['record','library','settings'].forEach(t=>{
+      document.getElementById('tab-'+t).style.display=t===id?'block':'none';
+    });
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+    el.classList.add('on');
+    document.getElementById('prog').style.display=id==='record'?'flex':'none';
+  }
+
+  /* PROGRESS */
+  function setProg(step){
+    [1,2,3].forEach(i=>{
+      const d=document.getElementById('pd'+i), l=document.getElementById('pl'+i);
+      const cls=i<step?'done':i===step?'now':'wait';
+      d.className='p-dot '+cls; l.className='p-lbl '+cls;
+      d.textContent=i<step?'✓':i;
+    });
+    document.getElementById('ln1').className='p-line'+(step>1?' done':'');
+    document.getElementById('ln2').className='p-line'+(step>2?' done':'');
+  }
+
+  /* SCREENS */
+  function show(id){
+    ['idle','recording','processing','skill'].forEach(s=>{
+      const el=document.getElementById('s-'+s);
+      if(el) el.classList.toggle('on',s===id);
+    });
+  }
+
+  /* TIMER */
+  function startTimer(){
+    secs=0;evN=0;shN=0;paused=false;tick();
+    timerInt=setInterval(()=>{
+      if(!paused){
+        secs++;tick();
+        if(Math.random()>.55){evN++;document.getElementById('ev-n').textContent=evN;}
+        if(Math.random()>.82){shN++;document.getElementById('sh-n').textContent=shN;}
+      }
+    },1000);
+  }
+  function tick(){
+    const m=String(Math.floor(secs/60)).padStart(2,'0');
+    const s=String(secs%60).padStart(2,'0');
+    document.getElementById('timer').textContent=m+':'+s;
+  }
+  function stopTimer(){clearInterval(timerInt);timerInt=null;}
+
+  /* ACTIONS */
+  function startRec(){
+    // Production: chrome.runtime.sendMessage({type:'popup:start_recording'})
+    show('recording'); setProg(1); startTimer();
+  }
+  function togglePause(){
+    paused=!paused;
+    document.getElementById('pause-btn').textContent=paused?'▶ Resume':'⏸ Pause';
+  }
+  function stopRec(){
+    stopTimer();
+    // Production: chrome.runtime.sendMessage({type:'popup:stop_recording'})
+    show('processing'); setProg(2); runProcessing();
+  }
+
+  /* PROCESSING — replace with real Supabase polling */
+  function setStage(done,active){
+    [0,1,2,3].forEach(i=>{
+      const el=document.getElementById('ps'+i);
+      el.className='ps'+(done.includes(i)?' done':i===active?' active':'');
+      el.querySelector('.ps-ico').innerHTML=done.includes(i)?'✅':i===active?'<span class="spin">⚙️</span>':['📤','🎙️','📝','💾'][i];
+    });
+  }
+  function runProcessing(){
+    setStage([0],1);
+    setTimeout(()=>setStage([0,1],2),2500);
+    setTimeout(()=>setStage([0,1,2],3),5000);
+    setTimeout(()=>{setStage([0,1,2,3],-1);show('skill');setProg(3);},7500);
+  }
+
+  /* SKILL */
+  function saveSkill(){
+    // Production: call Rt(skill)
+    alert('Downloads the .zip to your Downloads folder.');
+  }
+  function copySkill(btn){
+    // Production: navigator.clipboard.writeText(skill.body_md)
+    btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',2000);
+  }
+  function redo(){
+    const g=prompt('Any extra notes? (optional — just press OK to skip)','');
+    if(g===null)return;
+    show('processing');setProg(2);runProcessing();
+  }
+</script>
+</body>
+</html>
